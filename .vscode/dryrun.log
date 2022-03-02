@@ -1,0 +1,12 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/cixo/cx-private/active-projects/ClasciOS'
+rm -f  Clasci/Scheduler.o
+rm -f Test.bin
+ 
+avr-g++ -std=c++17 -I. -Os -g -Wall -mmcu= -mint8 -c Clasci/Scheduler.cpp -o Clasci/Scheduler.o
+ 
+avr-g++ -std=c++17 -I. -Os -g -Wall -mmcu= -mint8 -c Platforms/.cpp -o Platforms/.o
+avr-g++ -std=c++17 -I. -Os -g -Wall -mmcu= -mint8 -o Test.bin  Clasci/Scheduler.o Platforms/.o Test.cpp
+avr-size --mcu= -C Test.bin
+make: Leaving directory '/home/cixo/cx-private/active-projects/ClasciOS'
+ 
