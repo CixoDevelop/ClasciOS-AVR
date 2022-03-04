@@ -17,29 +17,34 @@ namespace Clasci{
 	 * Przypomnienie kompilatorowi o zmiennych statycznych, poniewaz GCC < 5.4
 	 * nie wspiera zmiennych inline co rodzi problemy na wielu systemach
 	 */
-	int Scheduler::actual_pid;
-	volatile WorkProcess Scheduler::processes_stack[];
+	PID Scheduler::actual_pid;
+	volatile Process Scheduler::processes_stack[];
 
-	void Scheduler::createProcess(NewProcess new_process){
+	PID Scheduler::createProcess(
+		ProcessStatus (*new_loop)(),
+		ProcessStatus new_status
+	  ){
 		/*
 		 * Funckja odpowiada za utworzenie nowego procesu w systemie, jako
 		 * parametr dostaje strukture tego procesu, nastepnie ustawia wskaznik
 		 * na najwyzszy proces i przeszukuje tablice procesow w poszukiwaniu
 		 * miejsca na jego utworzenie, gdy juz znajdzie to ustawia status na
-		 * ten jaki zwrocila funkcja init, ustawia funkcje loop i konczy
+		 * ten jaki podano w parametrze, przepisuje funkcje loop i konczy
 		 */ 
 		
 		for(
-			volatile WorkProcess *test_process = &processes_stack[MAX_PROCESS];
+			volatile Process *test_process = &processes_stack[MAX_PROCESS];
 			test_process >= processes_stack;
 			test_process --
 		  ){
 			if(test_process->status == EMPTY){
-				test_process->status = new_process.init(test_process - processes_stack);
-				test_process->loop = new_process.loop;
-				break;
+				test_process->status = new_status;
+				test_process->loop = new_loop;
+				return test_process - processes_stack;
 			}
 		}
+
+		return ERROR_PROCESSES_LIMIT;
 	}
 	
 	void Scheduler::switchContext(){
@@ -60,7 +65,11 @@ namespace Clasci{
 		 */
 		 
 		/* Odlicza aby przerwac gdyby zadnego RUNNING nie bylo */
-		for(int process_counter = MAX_PROCESS; process_counter > 0; process_counter --){
+		for(
+			PID process_counter = MAX_PROCESS; 
+			process_counter > 0; 
+			process_counter --
+		  ){
 			if(--actual_pid < 0)
 				actual_pid = MAX_PROCESS;
 

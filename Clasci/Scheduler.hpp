@@ -15,8 +15,14 @@
 	#define PROCESSES_STACK_SIZE 4
 #endif
 
+/* Definiuje ERROR_PROCESSES_LIMIT */
+#define ERROR_PROCESSES_LIMIT PROCESSES_STACK_SIZE
+
 /* Oblicza PID ostatniego procesu */
 #define MAX_PROCESS PROCESSES_STACK_SIZE - 1
+
+/* Definiuje typ PID */
+typedef int PID; 
 
 #include "Process.hpp"
 
@@ -30,20 +36,36 @@ namespace Clasci{
 		 */
 		 
 		public:
-			/* Funkcja tworzy nowy proces */
-			static void createProcess(NewProcess);
+			/* 
+			 * Funkcja tworzy nowy proces, jako parametry przyjmuje wpierw
+			 * adres do funkcji loop procesu, natomiast jako drugi argument
+			 * stan jaki przyjmie proces po poprawnym dodaniu. Zwraca PID 
+			 * procesu lub ERROR_PROCESSES_LIMIT 
+			 */
+			static PID createProcess(
+				ProcessStatus(*)(), 
+				ProcessStatus = RUNNING
+			  );
 			
-			/* Ta za wykonanie odpowiedniego w nowym kontekscie */
+			/* 
+			 * Ta za wykonanie odpowiedniego w nowym kontekscie. Powinna być
+			 * wykonywana tylko przez ISR oraz przez funkcje systemowe
+			 */
 			static void switchContext();
 			
-			/* Ta funkcja czysci tablice procesow, oraz inicjuje scheduler */
+			/* 
+			 * Ta funkcja czysci tablice procesow, oraz inicjuje scheduler. 
+			 * Powinna zostac wykonana przed inicjalizacja platformy oraz 
+			 * gdy zachodzi potrzeba usuniecia wszystkich procesow
+			 */
 			static void clearProcessesStack();
 			
+		private:	
 			/* Przechowuje PID aktualnie dzialajacego procesu */
-			static int actual_pid;
+			static PID actual_pid;
 			
 			/* Przechowuje pracujace w tle procesy */
-			volatile static WorkProcess processes_stack[PROCESSES_STACK_SIZE];
+			volatile static Process processes_stack[PROCESSES_STACK_SIZE];
 	};
 	
 }

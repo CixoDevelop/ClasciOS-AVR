@@ -34,11 +34,7 @@ namespace Clasci{
 	
 	
 	typedef struct{
-		/*
-		 * Kontener przechowujacy dzialajacy proces. Jest tworzony przez 
-		 * scheduler w momencie jego inicjalizacji, a nastepnie tylko zmieniany
-		 * przez funkcje tworzaca proces. 
-		 */
+		/* Kontener przechowujacy dzialajacy proces. */
 
 		/* 
 		 * Ta zmienna przechowuje aktualny stan procesu i to ona jest brana pod
@@ -59,38 +55,5 @@ namespace Clasci{
 		 * PRZESTANIE SIE WYKONYWAC PONIEWAZ DO status TRAFIA SMIECI!!!
 		 */
 		ProcessStatus (*loop)();
-	} WorkProcess;
-	
-
-	typedef struct{
-		/*
-		 * Kontener przechowuje dane potrzebne do utworzenia nowego procesu,
-		 * podczas tworzenia przez scheduler jest przeksztaucany w kontener
-		 * WorkProcess, na tym etapie dodawane jest pole przechowujace stan
-		 * procesu, za to funkcja init nie jest przechowywana, poniewaz
-		 * spelnila juz swoje zadanie
-		 */
-
-		/* 
-		 * Wskazuje na funkcje inicjujaca proces, PID to numer PID jaki proces
-		 * otrzymal na etapie tworzenia, a funkcja ta zwraca stan w jakim jest
-		 * proces po utworzeni, zwykle RUNNING, ale jezeli proces bedzie 
-		 * odpowiadal na przerwanie to moze zwrocic chocby INT_SLEEP, a jezeli
-		 * wyniknie jakis blad to zwrocenie EMPTY spowoduje ze proces nie 
-		 * zostanie utworzony
-		 */
-		ProcessStatus (*init)(int PID);
-		
-		/* 
-		 * Funkcja loop procesu, nie dostaje parametrow, wartosc jaka zwroci to
-		 * stan procesu po jej zakonczeniu, tak wiec aby zakonczyc proces i dac
-		 * zwolnic miejsce kolejnym nalezy zwrocic EMPTY, aby proces dalej 
-		 * dzialal RUNNING, przy dalszym oczekiwaniu na przerwanie INT_SLEEP, a
-		 * przy oczekiwaniu na reakcje innego procesu lub aplikacji 
-		 * NONINT_SLEEP. JEZELI TA FUNKCJA NIC NIE ZWROCI PROCES PRAWDOPODOBNIE 
-		 * PRZESTANIE SIE WYKONYWAC PONIEWAZ DO status TRAFIA SMIECI!!!
-		 */
-		ProcessStatus (*loop)();
-	} NewProcess;
-	
+	} Process;
 }
