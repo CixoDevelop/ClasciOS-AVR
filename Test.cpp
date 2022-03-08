@@ -33,12 +33,16 @@ int main(){
 	Platform::setupSchedulerINT();
 	
 	DDRA |= _BV(3);
+	DDRA |= _BV(7);
 	
-	DDRB = 0xff;
-	PORTB = 0;
+	DDRB = 0b01111111;
+	unsigned int value = 0;
 
 	while(true){
 		
+		PORTB = value & 0b01111111;
+		PORTA = (PORTA & 0b00001110) | (value & 0b10000000);
+
 		if(PORTA & _BV(3))
 			PORTA &= ~_BV(3);
 		else
@@ -46,11 +50,9 @@ int main(){
 		
 		for(long y = 32200; y > 0; y--)
 			asm("nop");
-		for(long y = 32200; y > 0; y--)
-			asm("nop");
 			
-		PORTB = PORTB + 1;
-		if(PORTB == 32)
-			PORTB = 0;
+		value = value + 1;
+		if(value == 255)
+			value = 0;
 	}
 }

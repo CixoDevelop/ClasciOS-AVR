@@ -5,7 +5,7 @@
  * 
  * Autor: Cixo
  * Data utworzenia: 2022-02-08
- * Data ostatniej modyfikajci: 2022-02-24
+ * Data ostatniej modyfikajci: 2022-03-08
  */
  
 #include "Scheduler.hpp"
@@ -21,8 +21,7 @@ namespace Clasci{
 	volatile Process Scheduler::processes_stack[];
 
 	PID Scheduler::createProcess(
-		ProcessStatus (*new_loop)(),
-		ProcessStatus new_status
+		ProcessStatus (*new_loop)(), ProcessStatus new_status
 	  ){
 		/*
 		 * Funckja odpowiada za utworzenie nowego procesu w systemie, jako
@@ -74,7 +73,8 @@ namespace Clasci{
 				actual_pid = MAX_PROCESS;
 
 			if(processes_stack[actual_pid].status == RUNNING){
-				processes_stack[actual_pid].status = processes_stack[actual_pid].loop();
+				processes_stack[actual_pid].status = 
+					processes_stack[actual_pid].loop();
 				break;
 			}
 		}
@@ -92,5 +92,36 @@ namespace Clasci{
 				 
 		for(actual_pid = MAX_PROCESS; actual_pid >= 0; actual_pid --)
 			processes_stack[actual_pid].status = EMPTY;
+	}
+
+	bool Scheduler::changeProcessStatuss(
+		PID process_pid, ProcessStatus new_status
+	  ){
+		/*
+		 * Funckja zmienia status procesu process_pid na new_status, zwraca
+		 * true jezeli sie uda lub false jezeli proces nie istnieje
+		 */
+
+		if(processes_stack[process_pid] != EMPTY){
+			processes_stack[process_pid] = new_status;
+			return true;
+	  	}
+
+		return false;
+	}
+
+	bool Scheduler::setNextProcess(PID process_pid){
+		/*
+		 * Jezeli proces istnieje, to ustawia scheduler by przy kolejnym 
+		 * wywlaszczeniu wykonal wlasnie ten proces oraz zwraca true, w 
+		 * przeciwnym wypadku zwraca false
+		 */
+
+		if(processes_stack[process_pid] == RUNNING){
+			actual_pid = process_pid + 1;
+			return true;
+		}
+		
+		return false;
 	}
 }
