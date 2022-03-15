@@ -4,8 +4,6 @@
  * dolaczany, a ten tylko w formie pliku .o
  * 
  * Autor: Cixo
- * Data utworzenia: 2022-02-08
- * Data ostatniej modyfikajci: 2022-03-08
  */
  
 #include "Scheduler.hpp"
@@ -21,14 +19,15 @@ namespace Clasci{
 	volatile Process Scheduler::processes_stack[];
 
 	PID Scheduler::createProcess(
-		ProcessStatus (*new_loop)(), ProcessStatus new_status
+		ProcessStatus (*new_loop)(void*), void *process_data, ProcessStatus new_status
 	  ){
 		/*
 		 * Funckja odpowiada za utworzenie nowego procesu w systemie, jako
 		 * parametr dostaje strukture tego procesu, nastepnie ustawia wskaznik
 		 * na najwyzszy proces i przeszukuje tablice procesow w poszukiwaniu
 		 * miejsca na jego utworzenie, gdy juz znajdzie to ustawia status na
-		 * ten jaki podano w parametrze, przepisuje funkcje loop i konczy
+		 * ten jaki podano w parametrze, przepisuje funkcje loop, adres danych
+		 * oraz status i konczy
 		 */ 
 		
 		for(
@@ -39,6 +38,7 @@ namespace Clasci{
 			if(test_process->status == EMPTY){
 				test_process->status = new_status;
 				test_process->loop = new_loop;
+				test_process->process_data = process_data;
 				return test_process - processes_stack;
 			}
 		}
@@ -54,7 +54,7 @@ namespace Clasci{
 		 */
 		
 		/* Zatrzymaj odliczanie do kolejnego przerwania */
-		Platform::pauseSchedulerINT();
+		Platform::criticalStart();
 		
 		/* 
 		 * Przeszukaj tablice procesow, zaczynajac od aktualnego, i wykonaj
@@ -69,19 +69,19 @@ namespace Clasci{
 			process_counter > 0; 
 			process_counter --
 		  ){
-			if(--actual_pid < 0)
+			if(actual_pid-- < 0)
 				actual_pid = MAX_PROCESS;
 
 			if(processes_stack[actual_pid].status == RUNNING){
 				processes_stack[actual_pid].status = 
-					processes_stack[actual_pid].loop();
+					processes_stack[actual_pid].loop(processes_stack[actual_pid].process_data);
 				break;
 			}
 		}
 		
 		/* Resetuje odliczanie i wznow je */
 		Platform::resetSchedulerINT();
-		Platform::playSchedulerINT();
+		Platform::criticalStop();
 	}
 	
 	void Scheduler::clearProcessesStack(){
@@ -102,8 +102,8 @@ namespace Clasci{
 		 * true jezeli sie uda lub false jezeli proces nie istnieje
 		 */
 
-		if(processes_stack[process_pid] != EMPTY){
-			processes_stack[process_pid] = new_status;
+		if(processes_stack[process_pid].status != EMPTY){
+			processes_stack[process_pid].status = new_status;
 			return true;
 	  	}
 
@@ -117,7 +117,7 @@ namespace Clasci{
 		 * przeciwnym wypadku zwraca false
 		 */
 
-		if(processes_stack[process_pid] == RUNNING){
+		if(processes_stack[process_pid].status == RUNNING){
 			actual_pid = process_pid + 1;
 			return true;
 		}

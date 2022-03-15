@@ -4,8 +4,6 @@
  * znajduje sie w przestrzeni nazw Clasci
  * 
  * Autor: Cixo
- * Data utworzenia: 2022-02-08
- * Data ostatniej modyfikajci: 2022-02-24
  */
 
 #pragma once
@@ -25,11 +23,8 @@ namespace Clasci{
 		/* Proces istnieje i bedzie wykonany gdy  */
 		RUNNING = 0x01,
 		
-		/* Oznacza ze proces zostanie wykonany przy jakims przerwaniu */
-		INT_SLEEP = 0x02,
-
-		/* Oznacza ze proces jest zawieszony, ale nie moze zostac nadpisany */
-		NONINT_SLEEP = 0x03,
+		/* Proces zawieszony, ale nie usuniety */
+		SLEEP = 0x02,
 	};
 	
 	
@@ -54,6 +49,13 @@ namespace Clasci{
 		 * NONINT_SLEEP. JEZELI TA FUNKCJA NIC NIE ZWROCI PROCES PRAWDOPODOBNIE 
 		 * PRZESTANIE SIE WYKONYWAC PONIEWAZ DO status TRAFIA SMIECI!!!
 		 */
-		ProcessStatus (*loop)();
+		ProcessStatus (*loop)(void *);
+
+		/*
+		 * Przechowuje dodatkowe dane na jakich pracuje proces, dane te sa
+		 * przekazywane do funkcji loop procesu za kazdym jej wywolaniem
+		 * a przez to ze to wskaznik, ta moze je dowolnie trwale zmieniac
+		 */
+		void *process_data;
 	} Process;
 }

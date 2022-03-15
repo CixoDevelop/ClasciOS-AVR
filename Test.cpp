@@ -1,58 +1,71 @@
+/*
+ * Plik jest przykladem dzialania systemu ClasciOS na mikrokontrolerze ATtiny261
+ * Mruga on 3 diodami (Procesy) oraz miga diodami podlaczonymi do rejestru 
+ * przesuwnego (Aplikacja)
+ *
+ * Autor: Cixo
+ */
+
+/* Dolacza naglowki systemu operacyjnego */
 #include "Clasci/Process.hpp"
 #include "Clasci/Scheduler.hpp"
 #include "Clasci/Platform.hpp"
 
+/* Dolacza naglowki sterownikow */
+#include "Drivers/Pin.hpp"
+#include "Drivers/ShiftRegister.hpp"
+
+/* Dolacza naglowki dla mikrokontrolera */
 #include <avr/io.h>
 
-Clasci::ProcessStatus ProcessOne(){
-	if(PORTA & _BV(2))
-		PORTA &= ~_BV(2);
-	else
-		PORTA |= _BV(2);
-	return Clasci::RUNNING;
-}
-
-Clasci::ProcessStatus ProcessTwo(){
-	if(PORTA & _BV(1))
-		PORTA &= ~_BV(1);
-	else
-		PORTA |= _BV(1);
+/* Funkcja procesu, ktora zamienia wartosc pinu */
+Clasci::ProcessStatus PinInvert(void *process_data){
+	/* Konwertuje na pin */
+	Drivers::Pin *pin = (Drivers::Pin*)(process_data);
+	/* Ustawia pin */
+	pin->setState((Drivers::PinState)(!pin->getState()));
+	/* Zwraca chec dalszej pracy */
 	return Clasci::RUNNING;
 }
 
 int main(){
+	/* Czysci stos procesow */
 	Clasci::Scheduler::clearProcessesStack();
-	
-	DDRA |= _BV(2);
-	Clasci::Scheduler::createProcess(ProcessOne);
 
-	DDRA |= _BV(1);
-	PORTA |= _BV(1);
-	Clasci::Scheduler::createProcess(ProcessTwo);
+	/* Ustawia kolejne piny oraz tworzy procesy */
+
+	Drivers::Pin psOne(&PINA, 1);
+	Drivers::Pin psTwo(&PINA, 2);
+	Drivers::Pin psThree(&PINA, 3);
+
+	psOne = Drivers::OUT;
+	psOne = Drivers::LOW;
+	Clasci::Scheduler::createProcess(PinInvert, &psOne);
+
+	psTwo = Drivers::OUT;
+	psTwo = Drivers::LOW;
+	Clasci::Scheduler::createProcess(PinInvert, &psTwo);
+
+	psThree = Drivers::OUT;
+	psThree = Drivers::LOW;
+	Clasci::Scheduler::createProcess(PinInvert, &psThree);
 	
+	/* Uruchamia system operacyjny */
 	Platform::setupSchedulerINT();
-	
-	DDRA |= _BV(3);
-	DDRA |= _BV(7);
-	
-	DDRB = 0b01111111;
-	unsigned int value = 0;
 
+	/* Tworzy rejestr do ktorego podlaczone sa diody */
+	Drivers::ShiftRegister LEDS(
+		Drivers::Pin(&PINA, 4),
+		Drivers::Pin(&PINA, 6),
+		Drivers::Pin(&PINA, 7)	
+	);
+
+	/* W petli zamienia kolejne piny rejestru */
 	while(true){
-		
-		PORTB = value & 0b01111111;
-		PORTA = (PORTA & 0b00001110) | (value & 0b10000000);
-
-		if(PORTA & _BV(3))
-			PORTA &= ~_BV(3);
-		else
-			PORTA |= _BV(3);
-		
-		for(long y = 32200; y > 0; y--)
-			asm("nop");
-			
-		value = value + 1;
-		if(value == 255)
-			value = 0;
+		for(int x = 8; x > 0; x--){
+			for(long y = 32000; y > 0; y--)
+				asm("nop");
+			LEDS.setState(x - 1, (Drivers::PinState)(!LEDS.getState(x - 1)));
+		}
 	}
 }

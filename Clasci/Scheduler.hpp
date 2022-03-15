@@ -4,8 +4,6 @@
  * pliku Scheduler.cpp
  * 
  * Autor: Cixo
- * Data utworzenia: 2022-02-08
- * Data ostatniej modyfikajci: 2022-03-08
  */
 
 #pragma once
@@ -42,7 +40,7 @@ namespace Clasci{
 			 * stan jaki przyjmie proces po poprawnym dodaniu. Zwraca PID 
 			 * procesu lub ERROR_PROCESSES_LIMIT 
 			 */
-			static PID createProcess(ProcessStatus(*)(), ProcessStatus = RUNNING);
+			static PID createProcess(ProcessStatus(*)(void*),  void *, ProcessStatus = RUNNING);
 			
 			/* 
 			 * Ta za wykonanie odpowiedniego w nowym kontekscie. Powinna być
